@@ -1,0 +1,8 @@
+role_id,n_A,selected_A,rate_A,n_B,selected_B,rate_B,air,flag,note
+R1,102,1,0.0098,98,2,0.0204,0.48,True,Fewer than 5 selections - ratio is highly unstable
+R2,102,1,0.0098,98,0,0.0,0.0,True,Fewer than 5 selections - ratio is highly unstable
+R3,102,4,0.0392,98,0,0.0,0.0,True,Fewer than 5 selections - ratio is highly unstable
+R4,102,2,0.0196,98,6,0.0612,0.32,True,
+R5,102,6,0.0588,98,2,0.0204,0.347,True,
+R6,102,2,0.0196,98,1,0.0102,0.52,True,Fewer than 5 selections - ratio is highly unstable
+ALL,612,16,0.0261,588,11,0.0187,0.716,True,

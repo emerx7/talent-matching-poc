@@ -1,0 +1,7 @@
+DOCUMENT: Training and course record
+OFFICER: Veya Ashani (O0117)
+DATE: 2025-12-24
+
+- Veya Ashani achieved a distinction in the advanced module on the migration of core services to the cloud.
+- Rating: meets expectations.
+- They showed good attendance and punctuality.

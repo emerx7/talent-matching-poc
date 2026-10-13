@@ -1,0 +1,7 @@
+DOCUMENT: Training and course record
+OFFICER: Jon Linington (O0028)
+DATE: 2024-06-20
+
+- Jon completed the Foundations Certificate covering the rethink of subsidy rules for elderly households.
+- Rating: meets expectations.
+- Jon completed the Executive Module covering the migration of core services to the cloud.

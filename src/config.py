@@ -5,8 +5,9 @@ import tomllib
 from datetime import date
 from functools import lru_cache
 from pathlib import Path
+from typing import Literal
 
-from pydantic import BaseModel
+from pydantic import BaseModel, Field
 
 ROOT = Path(__file__).resolve().parent.parent
 
@@ -35,6 +36,10 @@ class Scoring(BaseModel):
 
 class Extraction(BaseModel):
     mode: str
+    provider: Literal["anthropic", "openrouter"] = "anthropic"
+    openrouter_model: str = ""
+    openrouter_workers: int = Field(default=8, ge=1)
+    openrouter_max_retries: int = Field(default=5, ge=0)
     llm_model: str
     llm_effort: str
     llm_max_tokens: int

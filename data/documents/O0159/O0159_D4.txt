@@ -1,0 +1,5 @@
+DOCUMENT: Annual appraisal comments
+OFFICER: Tado Fenford (O0159)
+DATE: 2025-11-04
+
+She assisted with the transformation of the operating model. Tado Fenford gained initial exposure to root cause analysis of recurring service failures. Tado contributed effectively to dashboards tracking service performance metrics.

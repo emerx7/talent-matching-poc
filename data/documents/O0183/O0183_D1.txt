@@ -1,0 +1,7 @@
+DOCUMENT: 360-degree feedback summary
+OFFICER: Belsa Dovake (O0183)
+DATE: 2020-07-01
+
+- They would benefit from more experience in root cause analysis of recurring service failures.
+- Direct reports said that Belsa Dovake assisted with dashboards tracking service performance metrics.
+- Overall a solid year.

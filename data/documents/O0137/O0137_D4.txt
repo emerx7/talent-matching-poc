@@ -1,0 +1,9 @@
+DOCUMENT: Training and course record
+OFFICER: Ludo Thalari (O0137)
+DATE: 2024-09-27
+
+- Ludo achieved a distinction in the advanced module on change management after the merger of two units.
+- Ludo Thalari achieved a distinction in the advanced module on the migration of core services to the cloud.
+- He completed the Foundations Certificate covering teamwork across departments on the annual review.
+- No concerns were raised during the period.
+- He would benefit from more experience in root cause analysis of recurring service failures.

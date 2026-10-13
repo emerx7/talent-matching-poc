@@ -1,0 +1,6 @@
+DOCUMENT: Training and course record
+OFFICER: Belth Linwick (O0135)
+DATE: 2026-01-14
+
+- Belth relocated to a new office during the period.
+- He achieved a distinction in the advanced module on incident management during the ransomware attack.

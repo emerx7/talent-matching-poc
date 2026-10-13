@@ -3,7 +3,7 @@ PYTHON ?= python
 .PHONY: demo pipeline test app install
 
 install:
-	$(PYTHON) -m pip install -r requirements.txt
+	$(PYTHON) -m pip install -r requirements-full.txt
 
 demo: pipeline app
 

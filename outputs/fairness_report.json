@@ -1,0 +1,230 @@
+{
+  "air_threshold": 0.8,
+  "air": [
+    {
+      "role_id": "R1",
+      "n_A": 102,
+      "selected_A": 1,
+      "rate_A": 0.0098,
+      "n_B": 98,
+      "selected_B": 2,
+      "rate_B": 0.0204,
+      "air": 0.48,
+      "flag": true,
+      "note": "Fewer than 5 selections - ratio is highly unstable"
+    },
+    {
+      "role_id": "R2",
+      "n_A": 102,
+      "selected_A": 1,
+      "rate_A": 0.0098,
+      "n_B": 98,
+      "selected_B": 0,
+      "rate_B": 0.0,
+      "air": 0.0,
+      "flag": true,
+      "note": "Fewer than 5 selections - ratio is highly unstable"
+    },
+    {
+      "role_id": "R3",
+      "n_A": 102,
+      "selected_A": 4,
+      "rate_A": 0.0392,
+      "n_B": 98,
+      "selected_B": 0,
+      "rate_B": 0.0,
+      "air": 0.0,
+      "flag": true,
+      "note": "Fewer than 5 selections - ratio is highly unstable"
+    },
+    {
+      "role_id": "R4",
+      "n_A": 102,
+      "selected_A": 2,
+      "rate_A": 0.0196,
+      "n_B": 98,
+      "selected_B": 6,
+      "rate_B": 0.0612,
+      "air": 0.32,
+      "flag": true,
+      "note": ""
+    },
+    {
+      "role_id": "R5",
+      "n_A": 102,
+      "selected_A": 6,
+      "rate_A": 0.0588,
+      "n_B": 98,
+      "selected_B": 2,
+      "rate_B": 0.0204,
+      "air": 0.347,
+      "flag": true,
+      "note": ""
+    },
+    {
+      "role_id": "R6",
+      "n_A": 102,
+      "selected_A": 2,
+      "rate_A": 0.0196,
+      "n_B": 98,
+      "selected_B": 1,
+      "rate_B": 0.0102,
+      "air": 0.52,
+      "flag": true,
+      "note": "Fewer than 5 selections - ratio is highly unstable"
+    },
+    {
+      "role_id": "ALL",
+      "n_A": 612,
+      "selected_A": 16,
+      "rate_A": 0.0261,
+      "n_B": 588,
+      "selected_B": 11,
+      "rate_B": 0.0187,
+      "air": 0.716,
+      "flag": true,
+      "note": ""
+    }
+  ],
+  "roles_flagged": [
+    "R1",
+    "R2",
+    "R3",
+    "R4",
+    "R5",
+    "R6",
+    "ALL"
+  ],
+  "counterfactual": {
+    "docs_tested": 20,
+    "unchanged": 13,
+    "pct_unchanged": 65.0,
+    "differences": [
+      {
+        "doc_id": "O0188_D3",
+        "only_original": [
+          [
+            "C04",
+            2
+          ]
+        ],
+        "only_swapped": [
+          [
+            "C04",
+            1
+          ]
+        ]
+      },
+      {
+        "doc_id": "O0182_D4",
+        "only_original": [
+          [
+            "C10",
+            3
+          ]
+        ],
+        "only_swapped": [
+          [
+            "C10",
+            4
+          ]
+        ]
+      },
+      {
+        "doc_id": "O0185_D2",
+        "only_original": [
+          [
+            "C03",
+            1
+          ]
+        ],
+        "only_swapped": [
+          [
+            "C10",
+            1
+          ]
+        ]
+      },
+      {
+        "doc_id": "O0109_D4",
+        "only_original": [
+          [
+            "C14",
+            1
+          ]
+        ],
+        "only_swapped": []
+      },
+      {
+        "doc_id": "O0186_D3",
+        "only_original": [
+          [
+            "C08",
+            1
+          ]
+        ],
+        "only_swapped": [
+          [
+            "C08",
+            2
+          ]
+        ]
+      },
+      {
+        "doc_id": "O0113_D5",
+        "only_original": [
+          [
+            "C07",
+            3
+          ],
+          [
+            "C13",
+            4
+          ],
+          [
+            "C16",
+            2
+          ]
+        ],
+        "only_swapped": [
+          [
+            "C07",
+            2
+          ],
+          [
+            "C13",
+            3
+          ],
+          [
+            "C16",
+            4
+          ]
+        ]
+      },
+      {
+        "doc_id": "O0179_D6",
+        "only_original": [
+          [
+            "C02",
+            3
+          ],
+          [
+            "C14",
+            3
+          ]
+        ],
+        "only_swapped": [
+          [
+            "C02",
+            4
+          ],
+          [
+            "C14",
+            4
+          ]
+        ]
+      }
+    ],
+    "extractor": "llm"
+  }
+}

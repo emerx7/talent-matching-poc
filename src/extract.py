@@ -2,8 +2,9 @@
 
 Two interchangeable extractors produce the same row shape:
   * MockExtractor — deterministic keyword/phrase rules (default, offline).
-  * LLMExtractor  — Anthropic API with a fixed competency list and a JSON schema,
-                    validated with pydantic. Used only when ANTHROPIC_API_KEY is set.
+  * LLM extractors — a fixed competency list and a JSON schema, validated with pydantic,
+                    via Anthropic or OpenRouter (config.toml `provider`). Used only when that
+                    provider's API key is set in the environment.
 
 Every quote, from either extractor, must be an exact substring of its source
 document or the row is rejected. Embeddings are used only to *suggest* competency
@@ -16,8 +17,10 @@ import json
 import logging
 import os
 import re
+from concurrent.futures import ThreadPoolExecutor, as_completed
 from dataclasses import dataclass, field
 from pathlib import Path
+from typing import Any
 
 import pandas as pd
 from pydantic import BaseModel, Field, ValidationError
@@ -150,22 +153,40 @@ class LLMExtraction(BaseModel):
 
 
 PROMPT_VERSION = "v1"
+API_KEY_ENV = {"anthropic": "ANTHROPIC_API_KEY", "openrouter": "OPENROUTER_API_KEY"}
+OPENROUTER_BASE_URL = "https://openrouter.ai/api/v1"
+_FENCE_RE = re.compile(r"^\s*```(?:json)?\s*(.*?)\s*```\s*$", re.S)
+
+
+class MissingAPIKeyError(RuntimeError):
+    """A cache miss with no API key. Deliberately not retried or swallowed: the run stops."""
+
+
+def strip_json_fences(raw: str) -> str:
+    """Models answering without a schema sometimes wrap JSON in ```json fences."""
+    m = _FENCE_RE.match(raw)
+    return m.group(1) if m else raw.strip()
 
 
 @dataclass
 class LLMExtractor:
+    """Provider-neutral LLM extraction: prompt, schema, retry and on-disk cache.
+
+    Subclasses supply `_make_client()` and `_call(text) -> raw JSON string`. The API client is
+    created lazily on the first cache miss, so a fully cached run (e.g. from the committed
+    cache) needs no API key. A `client` can also be injected (tests do this).
+    """
     competencies: pd.DataFrame
     model: str
-    effort: str
     max_tokens: int
     cache_dir: Path
+    client: Any = None
+    provider: str = ""
     name: str = "llm"
     unmatched: list[str] = field(default_factory=list)
 
     def __post_init__(self):
-        import anthropic  # imported lazily so mock mode needs no API package configured
-
-        self.client = anthropic.Anthropic()
+        self.name = f"llm-{self.provider}"
         self.cache_dir.mkdir(parents=True, exist_ok=True)
         ids = list(self.competencies["competency_id"])
         self.valid_ids = set(ids)
@@ -199,10 +220,57 @@ class LLMExtractor:
             "additionalProperties": False,
         }
 
+    def _make_client(self):
+        raise NotImplementedError
+
+    def _get_client(self):
+        if self.client is None:
+            self.client = self._make_client()
+        return self.client
+
+    def _call(self, text: str) -> str:
+        raise NotImplementedError
+
+    def cache_path(self, text: str) -> Path:
+        key = hashlib.sha256(f"{PROMPT_VERSION}|{self.provider}|{self.model}|{text}".encode()).hexdigest()[:24]
+        return self.cache_dir / f"{key}.json"
+
+    def extract(self, text: str) -> list[dict]:
+        cache = self.cache_path(text)
+        if cache.exists():
+            raw = cache.read_text(encoding="utf-8")
+        else:
+            raw = None
+            for attempt in range(2):  # one retry on invalid output
+                try:
+                    raw = strip_json_fences(self._call(text))
+                    LLMExtraction.model_validate_json(raw)
+                    break
+                except MissingAPIKeyError:
+                    raise
+                except (ValidationError, RuntimeError, StopIteration) as e:
+                    log.warning("LLM extraction attempt %d failed: %s", attempt + 1, e)
+                    raw = None
+            if raw is None:
+                return []
+            cache.write_text(raw, encoding="utf-8")
+        return parse_llm_output(raw, self.valid_ids)
+
+
+@dataclass
+class AnthropicExtractor(LLMExtractor):
+    provider: str = "anthropic"
+    effort: str = "medium"
+
+    def _make_client(self):
+        import anthropic  # imported lazily so mock mode needs no API package configured
+
+        return anthropic.Anthropic()
+
     def _call(self, text: str) -> str:
         # Current Claude models do not accept `temperature`; determinism comes from the fixed
-        # schema (structured outputs), a fixed prompt, and the on-disk cache below.
-        resp = self.client.messages.create(
+        # schema (structured outputs), a fixed prompt, and the on-disk cache.
+        resp = self._get_client().messages.create(
             model=self.model,
             max_tokens=self.max_tokens,
             system=self.system,
@@ -213,25 +281,102 @@ class LLMExtractor:
             raise RuntimeError(f"LLM stop_reason={resp.stop_reason}")
         return next(b.text for b in resp.content if b.type == "text")
 
+
+@dataclass
+class OpenRouterExtractor(LLMExtractor):
+    """OpenRouter via its OpenAI-compatible API. The key comes only from OPENROUTER_API_KEY.
+
+    First asks for output constrained to the JSON schema (routing only to providers that
+    support it). If the model rejects that, it falls back to describing the schema in the
+    prompt; pydantic validation and the exact-quote check apply either way.
+
+    `prefetch()` fills the on-disk cache with `workers` concurrent requests. Rate-limit (429),
+    server (5xx), timeout and connection errors are retried by the openai client with
+    exponential backoff that honours Retry-After, up to `max_retries` times per request.
+    """
+    provider: str = "openrouter"
+    structured: bool = True  # flips to False once the model rejects response_format
+    workers: int = 8
+    max_retries: int = 5
+    _failed: set[str] = field(default_factory=set, init=False, repr=False)
+
+    def _make_client(self):
+        from openai import OpenAI
+
+        key = os.environ.get(API_KEY_ENV["openrouter"])
+        if not key:
+            raise MissingAPIKeyError(
+                "OPENROUTER_API_KEY is not set and this document is not in the cache (data/cache/llm/). "
+                "Set the key to extract new documents, or replay only documents that are already cached.")
+        return OpenAI(base_url=OPENROUTER_BASE_URL, api_key=key, max_retries=self.max_retries)
+
+    def prefetch(self, texts: list[str]) -> None:
+        """Extract uncached documents concurrently into the on-disk cache; cached ones are skipped."""
+        unique = list(dict.fromkeys(texts))
+        todo = [t for t in unique if not self.cache_path(t).exists()]
+        if not todo:
+            return
+        print(f"OpenRouter: {len(unique) - len(todo)} documents already cached, extracting {len(todo)} "
+              f"with {self.workers} workers", flush=True)
+        with ThreadPoolExecutor(max_workers=self.workers) as pool:
+            futures = [pool.submit(self.extract, t) for t in todo]
+            try:
+                for done, fut in enumerate(as_completed(futures), 1):
+                    fut.result()  # unexpected errors (e.g. invalid key) stop the run
+                    if done % 25 == 0 or done == len(todo):
+                        print(f"  {done}/{len(todo)} documents", flush=True)
+            except BaseException:
+                pool.shutdown(wait=False, cancel_futures=True)
+                raise
+        # Documents still uncached failed after all retries: skip them for the rest of this run
+        # (no second round of slow retries) and leave them uncached so the next run retries them.
+        self._failed = {t for t in todo if not self.cache_path(t).exists()}
+        if self._failed:
+            log.warning("%d document(s) failed after retries and were not cached; re-run to retry them.",
+                        len(self._failed))
+
     def extract(self, text: str) -> list[dict]:
-        key = hashlib.sha256(f"{PROMPT_VERSION}|{self.model}|{text}".encode()).hexdigest()[:24]
-        cache = self.cache_dir / f"{key}.json"
-        if cache.exists():
-            raw = cache.read_text(encoding="utf-8")
+        if text in self._failed:
+            return []
+        return super().extract(text)
+
+    def _call(self, text: str) -> str:
+        import openai
+
+        try:
+            return self._request(text)
+        except (openai.RateLimitError, openai.InternalServerError, openai.APIConnectionError) as e:
+            raise RuntimeError(f"OpenRouter request failed after {self.max_retries} retries: {e}") from e
+
+    def _request(self, text: str) -> str:
+        import openai
+
+        system = (self.system + "\n\nRespond with ONLY a JSON object (no prose, no code fences) matching this "
+                  f"JSON Schema:\n{json.dumps(self.schema)}")
+        kwargs = {"model": self.model, "max_tokens": self.max_tokens, "temperature": 0,
+                  "messages": [{"role": "system", "content": system},
+                               {"role": "user", "content": f"<document>\n{text}\n</document>"}]}
+        if self.structured:
+            try:
+                resp = self._get_client().chat.completions.create(
+                    **kwargs,
+                    response_format={"type": "json_schema",
+                                     "json_schema": {"name": "evidence", "strict": True, "schema": self.schema}},
+                    extra_body={"provider": {"require_parameters": True}},
+                )
+            except (openai.BadRequestError, openai.NotFoundError) as e:
+                log.warning("Model %s does not accept structured output (%s); using prompt-only JSON.",
+                            self.model, e)
+                self.structured = False
+                return self._call(text)
         else:
-            raw = None
-            for attempt in range(2):  # one retry on invalid output
-                try:
-                    raw = self._call(text)
-                    LLMExtraction.model_validate_json(raw)
-                    break
-                except (ValidationError, RuntimeError, StopIteration) as e:
-                    log.warning("LLM extraction attempt %d failed: %s", attempt + 1, e)
-                    raw = None
-            if raw is None:
-                return []
-            cache.write_text(raw, encoding="utf-8")
-        return parse_llm_output(raw, self.valid_ids)
+            resp = self._get_client().chat.completions.create(**kwargs)
+        choice = resp.choices[0]
+        if choice.finish_reason == "length":
+            raise RuntimeError("LLM output truncated (max_tokens)")
+        if not choice.message.content:
+            raise RuntimeError("LLM returned no content")
+        return choice.message.content
 
 
 def parse_llm_output(raw: str, valid_ids: set[str]) -> list[dict]:
@@ -247,11 +392,17 @@ def parse_llm_output(raw: str, valid_ids: set[str]) -> list[dict]:
 # Pipeline
 # ---------------------------------------------------------------------------
 def choose_mode(requested: str | None = None) -> str:
-    mode = requested or load_settings().extraction.mode
+    ex = load_settings().extraction
+    mode = requested or ex.mode
+    key_env = API_KEY_ENV[ex.provider]
+    has_key = bool(os.environ.get(key_env))
     if mode == "auto":
-        return "llm" if os.environ.get("ANTHROPIC_API_KEY") else "mock"
-    if mode == "llm" and not os.environ.get("ANTHROPIC_API_KEY"):
-        log.warning("LLM mode requested but ANTHROPIC_API_KEY is not set; using mock extractor.")
+        mode = "llm" if has_key else "mock"
+    elif mode == "llm" and not has_key:
+        log.warning("%s is not set: replaying LLM results from the cache (data/cache/llm/). "
+                    "Any document not in the cache will stop the run.", key_env)
+    if mode == "llm" and ex.provider == "openrouter" and not ex.openrouter_model:
+        log.warning('provider = "openrouter" but openrouter_model is empty in config.toml; using mock extractor.')
         return "mock"
     return mode
 
@@ -259,9 +410,13 @@ def choose_mode(requested: str | None = None) -> str:
 def make_extractor(mode: str):
     s = load_settings()
     if mode == "llm":
+        ex = s.extraction
         comps = pd.read_csv(s.data_dir / "competencies.csv")
-        return LLMExtractor(comps, s.extraction.llm_model, s.extraction.llm_effort,
-                            s.extraction.llm_max_tokens, s.data_dir / "cache" / "llm")
+        cache = s.data_dir / "cache" / "llm"  # files keyed by provider + model + document text
+        if ex.provider == "openrouter":
+            return OpenRouterExtractor(comps, ex.openrouter_model, ex.llm_max_tokens, cache,
+                                       workers=ex.openrouter_workers, max_retries=ex.openrouter_max_retries)
+        return AnthropicExtractor(comps, ex.llm_model, ex.llm_max_tokens, cache, effort=ex.llm_effort)
     return MockExtractor()
 
 
@@ -294,12 +449,16 @@ def suggest_mappings(sentences: list[str], competencies: pd.DataFrame, threshold
     return pd.DataFrame(rows, columns=cols)
 
 
-def run(mode: str | None = None, use_embeddings: bool = True) -> pd.DataFrame:
+def run(mode: str | None = None, use_embeddings: bool = True, limit: int | None = None) -> pd.DataFrame:
     s = load_settings()
     mode = choose_mode(mode)
     extractor = make_extractor(mode)
     docs = pd.read_csv(s.data_dir / "documents_index.csv")
+    if limit:
+        docs = docs.head(limit)
     comps = pd.read_csv(s.data_dir / "competencies.csv")
+    if hasattr(extractor, "prefetch"):  # concurrent providers warm the cache; the loop below then reads it
+        extractor.prefetch([(s.data_dir / p).read_text(encoding="utf-8") for p in docs["path"]])
 
     rows, rejected, suggestions = [], 0, []
     for d in docs.itertuples():
@@ -313,7 +472,7 @@ def run(mode: str | None = None, use_embeddings: bool = True) -> pd.DataFrame:
         for sent in extractor.unmatched[start:]:
             suggestions.append((d.officer_id, d.doc_id, d.date, sent))
 
-    ev_df = pd.DataFrame(rows)
+    ev_df = pd.DataFrame(rows, columns=[*Evidence.model_fields, "doc_type"])
     ev_df.insert(0, "evidence_id", [f"E{i + 1:06d}" for i in range(len(ev_df))])
     s.outputs_dir.mkdir(exist_ok=True)
     ev_df.to_csv(s.outputs_dir / "evidence.csv", index=False)

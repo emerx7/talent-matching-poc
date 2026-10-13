@@ -132,7 +132,7 @@ def counterfactual_test(extractor, docs: list[tuple[str, str, str]], new_names: 
 # ---------------------------------------------------------------------------
 # Pipeline
 # ---------------------------------------------------------------------------
-def run(mode: str | None = None) -> dict:
+def run(mode: str | None = None, limit: int | None = None) -> dict:
     s = load_settings()
     officers = pd.read_csv(s.data_dir / "officers.csv")
     s.audit_dir.mkdir(parents=True, exist_ok=True)
@@ -146,6 +146,8 @@ def run(mode: str | None = None) -> dict:
     mode = choose_mode(mode)
     extractor = make_extractor(mode)
     n = s.fairness.counterfactual_sample_llm if mode == "llm" else s.fairness.counterfactual_sample
+    if limit:
+        n = min(n, limit)
     docs_idx = pd.read_csv(s.data_dir / "documents_index.csv")
     sample = docs_idx.sample(n=min(n, len(docs_idx)), random_state=s.fairness.attribute_seed)
     names = dict(zip(officers["officer_id"], officers["name"]))

@@ -1,0 +1,5 @@
+DOCUMENT: Annual appraisal comments
+OFFICER: Kasa Brenari (O0109)
+DATE: 2023-04-07
+
+He gained initial exposure to root cause analysis of recurring service failures.

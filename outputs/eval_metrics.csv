@@ -1,0 +1,21 @@
+competency_id,name,extractor,competency_tp,competency_fp,competency_fn,competency_precision,competency_recall,competency_f1,strict_tp,strict_fp,strict_fn,strict_precision,strict_recall,strict_f1,support
+C01,Strategic Thinking,llm,8.0,0.0,0.0,1.0,1.0,1.0,7.0,1.0,1.0,0.875,0.875,0.875,8
+C02,Crisis Leadership,llm,2.0,1.0,0.0,0.667,1.0,0.8,2.0,1.0,0.0,0.667,1.0,0.8,2
+C03,Stakeholder Management,llm,12.0,0.0,0.0,1.0,1.0,1.0,11.0,1.0,1.0,0.917,0.917,0.917,12
+C04,Digital Fluency,llm,2.0,0.0,0.0,1.0,1.0,1.0,2.0,0.0,0.0,1.0,1.0,1.0,2
+C05,People Development,llm,2.0,0.0,0.0,1.0,1.0,1.0,2.0,0.0,0.0,1.0,1.0,1.0,2
+C06,Policy Judgement,llm,5.0,0.0,0.0,1.0,1.0,1.0,4.0,1.0,1.0,0.8,0.8,0.8,5
+C07,Financial Stewardship,llm,4.0,0.0,0.0,1.0,1.0,1.0,2.0,2.0,2.0,0.5,0.5,0.5,4
+C08,Change Leadership,llm,6.0,1.0,0.0,0.857,1.0,0.923,6.0,1.0,0.0,0.857,1.0,0.923,6
+C09,Communication,llm,6.0,0.0,1.0,1.0,0.857,0.923,5.0,1.0,2.0,0.833,0.714,0.769,7
+C10,Collaboration,llm,9.0,1.0,2.0,0.9,0.818,0.857,7.0,3.0,4.0,0.7,0.636,0.667,11
+C11,Integrity & Public Values,llm,6.0,0.0,0.0,1.0,1.0,1.0,4.0,2.0,2.0,0.667,0.667,0.667,6
+C12,Data-Driven Decision Making,llm,8.0,0.0,0.0,1.0,1.0,1.0,7.0,1.0,1.0,0.875,0.875,0.875,8
+C13,Innovation,llm,4.0,0.0,0.0,1.0,1.0,1.0,4.0,0.0,0.0,1.0,1.0,1.0,4
+C14,Operational Excellence,llm,7.0,1.0,1.0,0.875,0.875,0.875,6.0,2.0,2.0,0.75,0.75,0.75,8
+C15,Negotiation,llm,4.0,0.0,0.0,1.0,1.0,1.0,3.0,1.0,1.0,0.75,0.75,0.75,4
+C16,Resilience,llm,4.0,0.0,1.0,1.0,0.8,0.889,3.0,1.0,2.0,0.75,0.6,0.667,5
+C17,Systems Thinking,llm,5.0,0.0,1.0,1.0,0.833,0.909,4.0,1.0,2.0,0.8,0.667,0.727,6
+C18,Customer Centricity,llm,6.0,0.0,0.0,1.0,1.0,1.0,5.0,1.0,1.0,0.833,0.833,0.833,6
+MICRO,micro average,llm,100.0,4.0,6.0,0.962,0.943,0.952,84.0,20.0,22.0,0.808,0.792,0.8,106
+MACRO,macro average,llm,,,,0.961,0.954,0.954,,,,0.81,0.809,0.806,212

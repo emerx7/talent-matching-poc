@@ -1,0 +1,5 @@
+DOCUMENT: Annual appraisal comments
+OFFICER: Darssa Tamington (O0195)
+DATE: 2026-02-16
+
+Darssa Tamington contributed effectively to root cause analysis of recurring service failures. He handled analytics to guide resource allocation competently within his team.

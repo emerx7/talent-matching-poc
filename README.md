@@ -1,6 +1,9 @@
 # Succession Planning Assistant (proof of concept)
 
 > **Decision support only. The panel makes all decisions. All data is synthetic.**
+>
+> The hosted demo shows **precomputed results from one LLM run** (Claude Haiku 5.5 via OpenRouter)
+> on synthetic data. It is display-only and makes no API calls.
 
 The assistant helps a public-service HR panel assess candidates for senior roles. It reads each
 officer's documents (appraisals, posting summaries, 360 feedback and course records) and
@@ -28,21 +31,41 @@ All weights, thresholds, decay rates, model names and seeds are in **`config.tom
 
 ## How to run
 
-Requires Python 3.11+.
+Requires Python 3.11+. There are two dependency sets:
+
+| File | For | Contents |
+|---|---|---|
+| `requirements.txt` | the **display-only app** (and Streamlit Community Cloud) | streamlit, pandas, pydantic |
+| `requirements-full.txt` | the **full pipeline** | the above + sentence-transformers (PyTorch, ~1 GB), anthropic, openai, pytest |
+
+### View the precomputed results (lightweight)
+`data/` and `outputs/` are committed, so the app runs straight away and makes no API calls:
 
 ```bash
-python -m venv .venv            # tip: put it outside OneDrive/Dropbox folders (torch is ~1 GB)
+python -m venv .venv
 .venv\Scripts\activate          # Windows  (macOS/Linux: source .venv/bin/activate)
 pip install -r requirements.txt
-
-python run_all.py               # generate -> extract -> score -> recommend -> audit -> evaluate -> tests
 streamlit run app.py
 ```
 
-`make demo` does the same thing where `make` is available. Useful flags:
-`python run_all.py --mode mock | --mode llm | --no-embeddings | --skip-tests`.
+**Streamlit Community Cloud:** deploy from this repo with main file `app.py`. It installs
+`requirements.txt` automatically. Choose Python 3.11 or newer in the app's advanced settings.
 
-### Without an API key (default)
+### Run the full pipeline
+```bash
+pip install -r requirements-full.txt   # tip: create the venv outside OneDrive/Dropbox folders
+python run_all.py --mode llm           # replays the committed LLM run from the cache - no API key needed
+streamlit run app.py
+```
+
+> **Note:** `python run_all.py` *without* `--mode llm` and without an API key uses the offline
+> mock extractor and **overwrites the committed LLM results** in `outputs/`. Run
+> `python run_all.py --mode llm` (or `git checkout outputs/`) to get them back.
+
+`make install` / `make demo` wrap these where `make` is available. Useful flags:
+`python run_all.py --mode mock | --mode llm | --limit N | --no-embeddings | --skip-tests`.
+
+### Mock extractor (offline, the default without a key)
 Everything runs offline. Extraction uses the deterministic **mock extractor**, which applies
 keyword and phrase rules per competency, a level from scope cues ("assisted" → 1, "led ... across the
 department" → 3, "at the national level" → 4), and skips negated sentences ("would benefit
@@ -51,23 +74,49 @@ from ...") and sentences that are not about the officer. The first run downloads
 nothing else depends on it.
 
 ### With an API key
-```bash
-set ANTHROPIC_API_KEY=sk-ant-...     # PowerShell: $env:ANTHROPIC_API_KEY="sk-ant-..."
-python run_all.py --mode llm
+Two LLM providers are supported. Pick one with `provider` under `[extraction]` in `config.toml`.
+API keys are read **only from environment variables** and never from a file.
+
+| `provider` | Model setting | Key variable | How it's called |
+|---|---|---|---|
+| `"openrouter"` (current) | `openrouter_model` (currently `anthropic/claude-haiku-5.5`) | `OPENROUTER_API_KEY` | `openai` package against OpenRouter's OpenAI-compatible API (`https://openrouter.ai/api/v1`) |
+| `"anthropic"` | `llm_model` (Anthropic IDs use hyphens, e.g. `claude-haiku-5-5`) | `ANTHROPIC_API_KEY` | `anthropic` package |
+
+```powershell
+$env:OPENROUTER_API_KEY = "sk-or-..."           # this terminal session only
+python run_all.py --mode llm --limit 10         # trial run: only 10 documents first
+python run_all.py --mode llm                    # full run once the trial looks right
 ```
-With `mode = "auto"` (the default), the LLM extractor is used **automatically whenever the key is set**.
-Use `--mode mock` to stay offline. LLM mode sends every document (~870) to the API once. Responses
-are cached in `data/cache/llm/`, so re-runs are free. The fairness counterfactual uses a smaller
-sample in LLM mode (`counterfactual_sample_llm`).
+
+- **Start with `--limit N`.** It extracts from only the first N documents and caps the fairness
+  counterfactual and the evaluation at N documents each. A first trial run makes up to about 4N API calls.
+  Scores and the app then cover only those documents, so do a full run afterwards.
+- With `mode = "auto"` (the default), the LLM extractor is used **automatically whenever the selected
+  provider's key is set**. Use `--mode mock` to stay offline. A full LLM run sends every document (~870) once.
+  If the OpenRouter model is left empty, the pipeline warns and falls back to the mock extractor.
+- **Caching:** responses are cached in `data/cache/llm/`, keyed by provider, model, prompt version and
+  document text, so re-runs are free. Changing provider or model makes fresh calls without overwriting the old cache.
+- **The committed cache lets anyone reproduce the LLM results without an API key.** With no key set,
+  `python run_all.py --mode llm` replays every response from `data/cache/llm/`. The API client is only
+  created on a cache miss, and a cache miss without a key stops the run with a clear error. Replaying this
+  repo's cache reproduces every file in `outputs/` byte for byte. Anyone can also open the cache files
+  to inspect the model's raw JSON output.
+- **Speed:** OpenRouter requests run concurrently (`openrouter_workers`, default 8), with retry and
+  exponential backoff on rate-limit and server errors (`openrouter_max_retries`).
+- The fairness counterfactual uses a smaller sample in LLM mode (`counterfactual_sample_llm`).
 
 LLM mode works as follows:
-- The model sees a fixed competency list with level descriptors and must return JSON that matches a schema
-  (structured outputs). The output is then validated again with pydantic, and unknown competency ids or
-  out-of-range levels are dropped.
-- **Temperature:** the brief asked for temperature 0. Current Claude models (default
-  `claude-opus-5-5`, set in config) do not accept sampling parameters, so stability comes instead from a fixed prompt,
-  constrained JSON output and the on-disk cache. The exact-quote check below catches what still varies.
-- Note: the LLM path has been tested with a stubbed client (see `tests/`), not yet against the live API.
+- The model sees a fixed competency list with level descriptors and must return JSON matching the evidence
+  schema. The output is validated again with pydantic, and unknown competency ids or out-of-range
+  levels are dropped. Every quote must also pass the exact-substring check.
+- **OpenRouter:** the request first asks for schema-constrained JSON (`response_format: json_schema`)
+  and routes only to providers that support it. If the model rejects that, the extractor falls back to describing
+  the schema in the prompt and stripping any ```` ```json ```` fences. The pydantic and exact-quote checks then do the
+  policing. Requests use `temperature = 0`.
+- **Anthropic:** uses structured outputs. Current Claude models don't accept a `temperature` setting, so stability
+  comes from the fixed prompt, constrained JSON and the cache.
+- Both providers are tested with stubbed clients (`tests/test_quote_validation.py`, `tests/test_openrouter.py`).
+  The committed results come from a live OpenRouter run. The Anthropic provider has not been run live.
 
 ## Key safeguards
 
@@ -128,20 +177,43 @@ one applies.
 **Separation of the audit.** The fairness attribute exists only for testing. Keeping it in a separate
 file and module makes it easy to show that scoring cannot use it.
 
-## Current results (mock extractor, seed 42)
+## Current results (LLM run: Claude Haiku 5.5 via OpenRouter, seed 42)
+
+These are the results committed in `outputs/` and shown in the hosted demo. The model was `anthropic/claude-haiku-5.5`
+on OpenRouter, with all 873 documents extracted once.
 
 | Check | Result |
 |---|---|
-| Extraction, competency match (30 labelled docs) | precision ≈ 0.97, recall ≈ 0.90 |
-| Extraction, competency + level | precision ≈ 0.91, recall ≈ 0.84 |
-| Quotes rejected by the exact-substring check | 0 (mock quotes are sentence spans by construction) |
-| Counterfactual name/pronoun swap | 120/120 documents produce identical evidence |
-| Adverse impact ratio | Several roles flagged, but on fewer than 5 selections each; pooled AIR across roles ≈ 0.87 (not flagged) |
+| Evidence extracted | 3,501 quotes from 873 documents |
+| Quotes rejected by the exact-substring check | 3 (model quotes that were not verbatim in the source) |
+| Extraction, competency match (30 labelled docs, micro) | precision 0.96, recall 0.94, F1 0.95 |
+| Extraction, competency + level (micro) | precision 0.81, recall 0.79, F1 0.80 |
+| Weakest competencies (recall, competency match) | Resilience 0.80 (5 labels), Collaboration 0.82 (11), Systems Thinking 0.83 (6) |
+| Counterfactual name/pronoun swap | **13/20 documents unchanged (65%)** |
+| Adverse impact ratio ("Ready now") | **Flagged for every role and pooled (0.72)**, mostly on fewer than 5 selections per role |
+| Bench ("Ready now" per role) | R1 3 · R2 1 (thin bench) · R3 4 · R4 8 · R5 8 · R6 3 |
 
-The AIR result is a useful example of why the audit reports counts alongside ratios. With 1–7
-"Ready now" candidates per role, one person more or less swings the ratio between 0 and 1. The
-A/B attribute is assigned at random, so these flags are noise, and the audit tab shows the counts
-and an "unstable" note so the panel does not over-read them.
+**Reading these results**
+- **Finding competencies works well, but assigning levels is harder.** The model usually spots the right competency in
+  the right sentence (precision and recall around 0.95). It gives the same level as the label about 80% of the time. Most
+  disagreements are off by one level, which matters because coverage depends on level.
+- **The counterfactual result needs investigating before any real use.** In 7 of 20 documents, swapping the
+  officer's name and pronouns changed the extracted evidence. In most cases a level moved by one (e.g. C02 from 3
+  to 4), and in one case a competency changed. This test can't tell whether the cause is sensitivity
+  to names and pronouns or ordinary run-to-run variation, even at temperature 0. A follow-up would re-run the
+  *unchanged* documents several times to measure baseline variation and compare. The mock extractor is
+  100% invariant by construction.
+- **The AIR flags are consistent with chance.** The A/B attribute is assigned at random. The pooled difference
+  (16 of 612 vs 11 of 588 officer-role pairs) has a Fisher exact p = 0.44. Pairs are not independent, because each
+  officer appears once per role. Per-role counts are tiny, so one person more or less swings a ratio between 0 and 1.
+  This is why the audit reports counts alongside ratios. A real audit needs larger samples and significance testing
+  before acting on a flag.
+- In LLM mode there are no embedding suggestions, because the LLM classifies every sentence itself. The
+  "unverified suggestions" panel only applies to the mock extractor.
+
+For comparison, the offline mock extractor (`python run_all.py --mode mock`) scores competency P 0.97 / R 0.90
+and level P 0.91 / R 0.84 on the same labelled set. Its rules share vocabulary with the template generator,
+so those numbers flatter it.
 
 ## Limitations
 
@@ -161,8 +233,9 @@ and an "unstable" note so the panel does not over-read them.
   establish fairness. Real audits need real (carefully governed) demographic data, intersectional
   views, checks on *document* bias (who gets glowing appraisals in the first place), and
   significance testing on small samples.
-- **The LLM mode has not been run live here.** Its schema, validation and quote checks are tested with a stub.
-  It should be evaluated on the labelled set (`python run_all.py --mode llm` and then the Audit tab) before anyone relies on it.
+- **One LLM run, one model, synthetic text.** The LLM results above come from a single run of one model
+  on template-generated documents. They show that the pipeline works end to end, not how accurate it would be on
+  real appraisals. The counterfactual differences in particular need follow-up (see above).
 - **Not a selection tool.** The output is a structured evidence pack for a panel. It is not a ranking
   to be thresholded automatically.
 
@@ -175,5 +248,8 @@ app.py               Streamlit UI
 src/                 generate_data, extract, score, recommend, fairness, evaluate, embeddings, config
 tests/               scoring maths, quote validation, readiness bands, fairness metrics
 data/                generated inputs (data/_audit/ holds the hidden audit attribute)
-outputs/             pipeline outputs read by the app
+data/cache/llm/      raw LLM responses, keyed by provider + model + document (enables keyless replay)
+outputs/             pipeline outputs read by the app (committed: results of the LLM run)
+requirements.txt     lightweight: display-only app
+requirements-full.txt  full pipeline
 ```

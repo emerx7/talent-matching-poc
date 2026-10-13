@@ -21,8 +21,12 @@ max_closable_level_gap = 1      # ...each no more than this many levels short, w
 thin_bench_max_ready = 1        # roles with <= this many "Ready now" successors are flagged
 
 [extraction]
-mode = "auto"                   # "auto" (LLM if ANTHROPIC_API_KEY set), "mock", or "llm"
-llm_model = "claude-opus-5-5"
+mode = "auto"                   # "auto" (LLM if the provider's API key is set), "mock", or "llm"
+provider = "openrouter"         # LLM provider: "anthropic" | "openrouter"
+openrouter_model = "anthropic/claude-haiku-5.5"  # key read ONLY from the OPENROUTER_API_KEY env var
+openrouter_workers = 8          # concurrent OpenRouter requests during extraction
+openrouter_max_retries = 5      # per request, on 429 / 5xx / timeouts, with exponential backoff
+llm_model = "claude-haiku-5-5"  # model used when provider = "anthropic" (key from ANTHROPIC_API_KEY)
 llm_effort = "medium"
 llm_max_tokens = 4000
 embedding_model = "all-MiniLM-L6-v2"

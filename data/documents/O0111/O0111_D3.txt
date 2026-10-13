@@ -1,0 +1,5 @@
+DOCUMENT: Annual appraisal comments
+OFFICER: Famon Thalberly (O0111)
+DATE: 2020-11-06
+
+They had not yet gained exposure to process improvement in licensing operations. They headed the migration of core services to the cloud, setting priorities for several teams. Famon contributed effectively to mapping interdependencies across agencies. They handled dashboards tracking service performance metrics competently within their team. They contributed effectively to prototyping novel ideas for frontline staff. They drove change management after the merger of two units for the whole division. They assisted with the crisis response to a major system outage. The division as a whole dealt with capability building for new hires this year.

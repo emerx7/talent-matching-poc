@@ -1,0 +1,7 @@
+DOCUMENT: Training and course record
+OFFICER: Haiya Ravova (O0163)
+DATE: 2017-07-03
+
+- No concerns were raised during the period.
+- He had not yet gained exposure to root cause analysis of recurring service failures.
+- He achieved a distinction in the advanced module on service-level targets for frontline operations.

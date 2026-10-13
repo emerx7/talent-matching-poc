@@ -1,0 +1,6 @@
+DOCUMENT: Training and course record
+OFFICER: Quith Quenira (O0013)
+DATE: 2024-01-04
+
+- Quith achieved a distinction in the advanced module on the settlement of a long-running contract dispute.
+- They achieved a distinction in the advanced module on incident management during the ransomware attack.

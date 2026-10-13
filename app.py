@@ -1,7 +1,11 @@
 """Succession Planning Assistant — Streamlit front end.
 
-Run `python run_all.py` first, then `streamlit run app.py`.
-The app only reads precomputed outputs; it never sees the hidden fairness attribute.
+Display-only: reads the precomputed files in data/ and outputs/ and never calls an LLM API,
+the extractors or the embedding model. Keep imports here to the lightweight set in
+requirements.txt (streamlit, pandas, pydantic) so it runs on Streamlit Community Cloud.
+It never sees the hidden fairness attribute.
+
+Locally: `python run_all.py` (needs requirements-full.txt) to regenerate outputs, then `streamlit run app.py`.
 """
 from __future__ import annotations
 

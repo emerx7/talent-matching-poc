@@ -1,0 +1,6 @@
+DOCUMENT: Training and course record
+OFFICER: Quivi Wilira (O0193)
+DATE: 2024-02-17
+
+- Quivi achieved a distinction in the advanced module on root cause analysis of recurring service failures.
+- They achieved a distinction in the advanced module on customer feedback improvements at service centres.

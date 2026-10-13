@@ -1,0 +1,7 @@
+DOCUMENT: 360-degree feedback summary
+OFFICER: Velin Ravell (O0034)
+DATE: 2021-08-25
+
+- The division as a whole dealt with capability building for new hires this year.
+- Velin Ravell participated in root cause analysis of recurring service failures as a team member.
+- Velin Ravell would benefit from more experience in dashboards tracking service performance metrics.

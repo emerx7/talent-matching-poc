@@ -1,0 +1,6 @@
+DOCUMENT: 360-degree feedback summary
+OFFICER: Luel Ashford (O0057)
+DATE: 2020-07-20
+
+- Direct reports said that Luel Ashford handled an ethics review of conflict-of-interest declarations competently within her team.
+- Direct reports said that Luel handled root cause analysis of recurring service failures competently within her team.

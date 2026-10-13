@@ -48,9 +48,11 @@ def prf(tp: int, fp: int, fn: int) -> tuple[float, float, float]:
     return p, r, f
 
 
-def run(mode: str | None = None) -> pd.DataFrame:
+def run(mode: str | None = None, limit: int | None = None) -> pd.DataFrame:
     s = load_settings()
     gt = pd.read_csv(s.data_dir / "ground_truth.csv", keep_default_na=False)
+    if limit:  # evaluate on the first `limit` labelled documents only
+        gt = gt[gt["doc_id"].isin(gt["doc_id"].drop_duplicates().head(limit))]
     docs = pd.read_csv(s.data_dir / "documents_index.csv").set_index("doc_id")
     comps = pd.read_csv(s.data_dir / "competencies.csv").set_index("competency_id")["name"]
     mode = choose_mode(mode)

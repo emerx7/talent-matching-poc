@@ -1,0 +1,41 @@
+opportunity_id,type,title,competencies,max_level,duration_months,description
+P01,Posting,"Deputy Director, Strategic Futures Unit",C01;C12,4,24,"Posting: Deputy Director, Strategic Futures Unit. Builds long-term direction and strategy and use of data and evidence in decisions."
+P02,Programme,Strategic Foresight Fellowship,C01,3,6,Programme: Strategic Foresight Fellowship. Builds long-term direction and strategy.
+P03,Posting,"Head, National Crisis Operations Centre",C02;C16,4,24,"Posting: Head, National Crisis Operations Centre. Builds leadership during crises and emergencies and resilience under pressure and setbacks."
+P04,Programme,Crisis Leadership Simulation Series,C02;C09,3,3,Programme: Crisis Leadership Simulation Series. Builds leadership during crises and emergencies and communication with internal and public audiences.
+P05,Posting,"Director, Industry Partnerships",C03;C15,4,24,"Posting: Director, Industry Partnerships. Builds engagement of stakeholders and partners and negotiating agreements."
+P06,Course,Stakeholder Engagement Masterclass,C03,2,1,Course: Stakeholder Engagement Masterclass. Builds engagement of stakeholders and partners.
+P07,Posting,"Product Lead, Government Digital Services",C04;C13,4,18,"Posting: Product Lead, Government Digital Services. Builds use of digital technology and innovation and experimentation."
+P08,Course,Digital Leadership Bootcamp,C04,3,2,Course: Digital Leadership Bootcamp. Builds use of digital technology.
+P09,Programme,Coaching Certification for Leaders,C05,3,6,Programme: Coaching Certification for Leaders. Builds growing and developing people.
+P10,Posting,"Head, Talent & Leadership Development",C05;C08,4,24,"Posting: Head, Talent & Leadership Development. Builds growing and developing people and leading organisational change."
+P11,Posting,"Senior Policy Adviser, Cabinet Office",C06;C01,4,24,"Posting: Senior Policy Adviser, Cabinet Office. Builds policy design and judgement and long-term direction and strategy."
+P12,Programme,Policy Design Studio,C06;C12,3,4,Programme: Policy Design Studio. Builds policy design and judgement and use of data and evidence in decisions.
+P13,Posting,Deputy CFO Attachment,C07;C11,4,18,"Posting: Deputy CFO Attachment. Builds budgets and financial management and integrity, ethics and governance."
+P14,Course,Public Finance for Non-Finance Leaders,C07,2,1,Course: Public Finance for Non-Finance Leaders. Builds budgets and financial management.
+P15,Posting,Transformation Office Lead,C08;C17,4,24,Posting: Transformation Office Lead. Builds leading organisational change and seeing whole systems and interdependencies.
+P16,Programme,Leading Change Programme,C08,3,3,Programme: Leading Change Programme. Builds leading organisational change.
+P17,Course,Media and Public Speaking Intensive,C09,3,1,Course: Media and Public Speaking Intensive. Builds communication with internal and public audiences.
+P18,Posting,Press Secretary Rotation,C09;C03,4,12,Posting: Press Secretary Rotation. Builds communication with internal and public audiences and engagement of stakeholders and partners.
+P19,Posting,"Secretariat, Inter-Agency Taskforce",C10;C17,4,18,"Posting: Secretariat, Inter-Agency Taskforce. Builds collaboration across boundaries and seeing whole systems and interdependencies."
+P20,Programme,Whole-of-Government Collaboration Lab,C10,3,4,Programme: Whole-of-Government Collaboration Lab. Builds collaboration across boundaries.
+P21,Posting,Internal Audit Rotation,C11;C07,4,12,"Posting: Internal Audit Rotation. Builds integrity, ethics and governance and budgets and financial management."
+P22,Course,Ethics and Governance in the Public Service,C11,2,1,"Course: Ethics and Governance in the Public Service. Builds integrity, ethics and governance."
+P23,Posting,"Lead, Analytics & Insights Unit",C12;C04,4,18,"Posting: Lead, Analytics & Insights Unit. Builds use of data and evidence in decisions and use of digital technology."
+P24,Course,Data-Driven Decision Making for Managers,C12,3,2,Course: Data-Driven Decision Making for Managers. Builds use of data and evidence in decisions.
+P25,Posting,Innovation Lab Secondment,C13;C18,4,12,Posting: Innovation Lab Secondment. Builds innovation and experimentation and putting citizens and service users first.
+P26,Course,Design Thinking Practicum,C13;C18,3,2,Course: Design Thinking Practicum. Builds innovation and experimentation and putting citizens and service users first.
+P27,Posting,"Director, Service Operations",C14;C16,4,24,"Posting: Director, Service Operations. Builds reliable, efficient operations and resilience under pressure and setbacks."
+P28,Course,Lean Operations Certificate,C14,3,2,"Course: Lean Operations Certificate. Builds reliable, efficient operations."
+P29,Programme,Negotiation Mastery Programme,C15,3,2,Programme: Negotiation Mastery Programme. Builds negotiating agreements.
+P30,Posting,Trade Negotiations Delegation,C15;C03,4,18,Posting: Trade Negotiations Delegation. Builds negotiating agreements and engagement of stakeholders and partners.
+P31,Programme,Resilient Leadership Retreat,C16,2,1,Programme: Resilient Leadership Retreat. Builds resilience under pressure and setbacks.
+P32,Posting,"Turnaround Assignment, Struggling Unit",C16;C08,4,18,"Posting: Turnaround Assignment, Struggling Unit. Builds resilience under pressure and setbacks and leading organisational change."
+P33,Programme,Systems Leadership Programme,C17;C01,3,4,Programme: Systems Leadership Programme. Builds seeing whole systems and interdependencies and long-term direction and strategy.
+P34,Posting,Policy-Operations Review Lead,C17;C06,4,12,Posting: Policy-Operations Review Lead. Builds seeing whole systems and interdependencies and policy design and judgement.
+P35,Posting,"Head, Citizen Experience Office",C18;C14,4,24,"Posting: Head, Citizen Experience Office. Builds putting citizens and service users first and reliable, efficient operations."
+P36,Course,Service Design for Citizens,C18,3,2,Course: Service Design for Citizens. Builds putting citizens and service users first.
+P37,Programme,Senior Leadership Milestone Programme,C01;C05;C08,3,6,Programme: Senior Leadership Milestone Programme. Builds long-term direction and strategy and growing and developing people and leading organisational change.
+P38,Programme,Emerging Leaders Exchange,C10;C03;C09,3,3,Programme: Emerging Leaders Exchange. Builds collaboration across boundaries and engagement of stakeholders and partners and communication with internal and public audiences.
+P39,Posting,Chief of Staff to Permanent Secretary,C01;C06;C09,4,18,Posting: Chief of Staff to Permanent Secretary. Builds long-term direction and strategy and policy design and judgement and communication with internal and public audiences.
+P40,Course,Financial Negotiation & Contracts,C15;C07,3,1,Course: Financial Negotiation & Contracts. Builds negotiating agreements and budgets and financial management.
