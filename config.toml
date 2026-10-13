@@ -1,0 +1,40 @@
+# Succession Planning Assistant — all tunable policy choices live here.
+# Changing a number here changes behaviour everywhere; nothing is hard-coded in src/.
+
+[general]
+seed = 42
+reference_date = "2026-10-01"   # "today" for recency calculations (keeps runs reproducible)
+data_dir = "data"
+outputs_dir = "outputs"
+
+[generation]
+n_officers = 200
+n_ground_truth_docs = 30
+
+[scoring]
+recency_decay = 0.85            # recency = decay ** years_since_evidence
+confidence_base = 0.5           # confidence = min(1, base + step * (independent_sources - 1))
+confidence_step = 0.25
+ready_now_min_fit = 0.8         # "Ready now" needs gate passed AND role_fit >= this
+max_gaps_for_developing = 2     # "Ready in 1–2 years" allows at most this many gaps...
+max_closable_level_gap = 1      # ...each no more than this many levels short, with a matching opportunity
+thin_bench_max_ready = 1        # roles with <= this many "Ready now" successors are flagged
+
+[extraction]
+mode = "auto"                   # "auto" (LLM if ANTHROPIC_API_KEY set), "mock", or "llm"
+llm_model = "claude-opus-5-5"
+llm_effort = "medium"
+llm_max_tokens = 4000
+embedding_model = "all-MiniLM-L6-v2"
+suggestion_threshold = 0.30     # min cosine similarity for an embedding *suggestion* (never scored)
+
+[recommend]
+top_k = 3
+tag_weight = 0.6
+embedding_weight = 0.4
+
+[fairness]
+attribute_seed = 7
+air_threshold = 0.8             # four-fifths rule
+counterfactual_sample = 120     # docs re-extracted with swapped names/pronouns
+counterfactual_sample_llm = 20  # smaller sample when the LLM extractor is used (cost)
